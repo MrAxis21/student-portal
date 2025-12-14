@@ -1,0 +1,164 @@
+{% extends 'portal/base.html' %}
+{% load portal_extras %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-md-6">
+        <h2 class="fw-bold mb-0">Student Dashboard</h2>
+        <p class="text-muted">Welcome back, {{ user.username }}!</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a href="{% url 'subject_list' %}" class="btn btn-primary d-inline-flex align-items-center">
+            <span class="me-2">+</span> Browse New Subjects
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card p-4 h-100 border-0 bg-card card-gradient">
+            <h6 class="text-uppercase text-white fw-bold mb-3">Enrolled</h6>
+            <h1 class="display-4 fw-bold mb-0">{{ enrolled_count }}</h1>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 h-100 border-0 bg-card card-gradient">
+            <h6 class="text-uppercase text-white fw-bold mb-3">Credits</h6>
+            <h1 class="display-4 fw-bold mb-0">{{ total_credits }}</h1>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 h-100 border-0 bg-card card-gradient">
+            <h6 class="text-uppercase text-white fw-bold mb-3">Accepted Requests</h6>
+            <h1 class="display-4 fw-bold mb-0">{{ approved_requests_count }}</h1>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-card border-0 shadow-sm mb-5">
+    <div class="card-header bg-transparent border-bottom border-secondary border-opacity-25 pb-3">
+        <h5 class="fw-bold mb-0">My Subjects</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-dark text-white">
+                    <tr>
+                        <th class="ps-4">Subject</th>
+                        <th>Code</th>
+                        <th>Credits</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    {% for enrollment in user.enrollments.all %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-white">{{ enrollment.subject.name }}</td>
+                        <td class="text-muted">{{ enrollment.subject.code }}</td>
+                        <td class="text-white">{{ enrollment.subject.credits }}</td>
+                        <td>
+                            {% if enrollment.status == 'approved' %}
+                            <span class="badge bg-success bg-opacity-25 text-success">Active</span>
+                            {% elif enrollment.status == 'pending' %}
+                            <span class="badge bg-warning bg-opacity-25 text-warning">Pending</span>
+                            {% elif enrollment.status == 'rejected' %}
+                            <span class="badge bg-danger bg-opacity-25 text-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-muted">You are not enrolled in any subjects yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-card border-0 shadow-sm mb-5">
+            <div class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-3">
+                <h5 class="fw-bold mb-0">My Service Requests</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-dark text-white">
+                            <tr>
+                                <th class="ps-4">Request Type</th>
+                                <th>Details</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="border-top-0">
+                            {% for req in requests %}
+                            <tr>
+                                <td class="ps-4 text-white fw-bold">{{ req.get_request_type_display }}</td>
+                                <td class="text-muted small">{{ req.details|truncatechars:100 }}</td>
+                                <td class="text-muted">{{ req.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if req.status == 'pending' %}
+                                    <span class="badge bg-warning bg-opacity-25 text-warning">Pending</span>
+                                    {% elif req.status == 'approved' %}
+                                    <span class="badge bg-success bg-opacity-25 text-success">Approved</span>
+                                    {% elif req.status == 'rejected' %}
+                                    <span class="badge bg-danger bg-opacity-25 text-danger">Rejected</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No service requests found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 col-lg-6 mx-auto">
+        <div class="card bg-card border-0 shadow-sm card-gradient">
+            <div class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-3">
+                <h5 class="fw-bold mb-0">Submit New Request</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}"
+                            class="form-label text-muted small text-uppercase fw-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <div class="form-text text-muted">{{ field.help_text }}</div>
+                        {% endif %}
+                        {% for error in field.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Submit Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add styling to service request form fields
+    document.querySelector('form select').classList.add('form-select', 'bg-dark', 'border-secondary', 'text-white');
+    document.querySelector('form textarea').classList.add('form-control', 'bg-dark', 'border-secondary', 'text-white');
+</script>
+{% endblock %}

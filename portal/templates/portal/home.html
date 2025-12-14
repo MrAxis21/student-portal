@@ -1,0 +1,80 @@
+{% extends 'portal/base.html' %}
+
+{% block content %}
+<div class="row align-items-center py-5">
+    <div class="col-lg-6">
+        <h1 class="display-3 fw-bold mb-4">
+            Managing Student Services <br>
+            <span style="color: var(--primary-blue);">Just Got Easier.</span>
+        </h1>
+        <p class="lead text-muted mb-5">
+            Access your courses, submit requests, and manage your academic profile through our modern, centralized
+            portal.
+        </p>
+        <div class="d-flex gap-3">
+            <a href="{% url 'subject_list' %}" class="btn btn-primary btn-lg">Browse Subjects</a>
+            <a href="{% url 'register' %}" class="btn btn-outline-secondary btn-lg">Create Account</a>
+        </div>
+    </div>
+    <div class="col-lg-6 d-none d-lg-block">
+        <div class="p-5"
+            style="background: radial-gradient(circle at center, rgba(0, 123, 255, 0.1) 0%, transparent 70%);">
+            <!-- Placeholder for Hero visual (e.g. 3D element or Icon) -->
+            <div class="card p-4 mx-auto"
+                style="max-width: 400px; transform: rotate(-5deg); border-color: var(--primary-blue);">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Next Gen Portal</h5>
+                    <p class="card-text text-muted">Experience the future of student management systems today.</p>
+                    <div class="progress mt-3" style="height: 6px; background-color: #333;">
+                        <div class="progress-bar bg-primary" style="width: 75%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 py-5 mt-5">
+    <div class="col-md-4">
+        <div class="card h-100 p-4 border-0 bg-transparent">
+            <div class="text-primary mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
+                    class="bi bi-collection" viewBox="0 0 16 16">
+                    <path
+                        d="M2.5 3.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11zm2-2a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM0 13a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 16 13V6a1.5 1.5 0 0 0-1.5-1.5h-13A1.5 1.5 0 0 0 0 6v7zm1.5.5A.5.5 0 0 1 1 13V6a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5h-13z" />
+                </svg>
+            </div>
+            <h4>Course Catalog</h4>
+            <p class="text-muted">Browse a variety of subjects including Web Dev, Embedded Systems, and more.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 p-4 border-0 bg-transparent">
+            <div class="text-primary mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
+                    class="bi bi-columns-gap" viewBox="0 0 16 16">
+                    <path
+                        d="M6 1v3H1V1h5zM1 0a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V1a1 1 0 0 0-1-1H1zm14 12v3h-5v-3h5zm-5-1a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1h-5zM6 8v7H1V8h5zM1 7a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1H1zm14-6v7h-5V1h5zm-5-1a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V1a1 1 0 0 0-1-1h-5z" />
+                </svg>
+            </div>
+            <h4>Dashboard</h4>
+            <p class="text-muted">Track your enrollments, view status updates, and manage service requests.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 p-4 border-0 bg-transparent">
+            <div class="text-primary mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
+                    class="bi bi-shield-check" viewBox="0 0 16 16">
+                    <path
+                        d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.615.615 0 0 0 .1-.025c.076-.023.174-.061.294-.118.24-.113.547-.29.893-.533a10.726 10.726 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.23-1.158-.412-1.61-.577a61.86 61.86 0 0 0-2.837-.856 12.185 12.185 0 0 0-1.74-.3H6.994c-.655.034-1.25.138-1.656.241zM6.626 2.375c-.328.091-.655.195-.989.31l-.22.06c-.32.09-.624.186-.91.29.356 3.036 1.055 5.545 2.115 7.18 1.06 1.635 2.508 2.518 4.378 2.518s3.318-.883 4.378-2.518c1.06-1.635 1.76-4.144 2.115-7.18-.286-.104-.59-.2-.91-.29l-.22-.06c-.334-.115-.66-.219-.99-.31.332.19.654.404.965.64.045.034.091.07.136.107 1.253 1.056 2.162 2.766 2.058 5.768-.137 3.967-1.42 7.037-3.098 8.441a13.34 13.34 0 0 1-5.69 2.012 13.336 13.336 0 0 1-5.69-2.012c-1.678-1.404-2.961-4.474-3.099-8.441-.103-3.002.805-4.712 2.058-5.768.045-.037.091-.073.136-.107.311-.236.633-.45.965-.640z" />
+                    <path
+                        d="M10.854 5.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 7.793l2.646-2.647a.5.5 0 0 1 .708 0z" />
+                </svg>
+            </div>
+            <h4>Secure & Fast</h4>
+            <p class="text-muted">Built with Django security standards and optimized for speed and reliability.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

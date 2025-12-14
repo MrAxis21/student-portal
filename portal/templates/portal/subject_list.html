@@ -1,0 +1,79 @@
+{% extends 'portal/base.html' %}
+{% load portal_extras %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">Browse Subjects</h2>
+</div>
+
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+
+{% if subjects %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for subject in subjects %}
+    <div class="col">
+        <div class="card h-100 border-0 bg-card">
+            {% if subject.image %}
+            <div style="height: 200px; overflow: hidden; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <img src="{{ subject.image.url }}" alt="{{ subject.name }}" class="w-100 h-100"
+                    style="object-fit: cover; transition: transform 0.5s ease;">
+            </div>
+            {% else %}
+            <div class="bg-dark d-flex align-items-center justify-content-center"
+                style="height: 200px; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <span class="text-muted">No Image</span>
+            </div>
+            {% endif %}
+
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title fw-bold mb-0 text-white">{{ subject.name }}</h5>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
+                        {{ subject.credits }} Cr
+                    </span>
+                </div>
+                <h6 class="text-muted small mb-3">{{ subject.code }}</h6>
+                <p class="card-text text-muted flex-grow-1 small">{{ subject.description|truncatechars:100 }}</p>
+
+                <div class="mt-4 pt-3 border-top border-secondary border-opacity-25">
+                    {% if subject.id in enrollment_status %}
+                    {% with status=enrollment_status|get_item:subject.id %}
+                    {% if status == 'approved' %}
+                    <button class="btn btn-success w-100 disabled" style="opacity: 0.8;">
+                        <span class="me-2">✓</span> Enrolled
+                    </button>
+                    {% elif status == 'pending' %}
+                    <button class="btn btn-warning w-100 disabled" style="opacity: 0.8;">
+                        <span class="me-2">⏳</span> Pending
+                    </button>
+                    {% elif status == 'rejected' %}
+                    <button class="btn btn-danger w-100 disabled" style="opacity: 0.8;">
+                        Rejected
+                    </button>
+                    {% endif %}
+                    {% endwith %}
+                    {% else %}
+                    <form action="{% url 'enroll_subject' subject.id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary w-100">Enroll Now</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <p class="text-muted">No subjects available for registration at the moment.</p>
+</div>
+{% endif %}
+{% endblock %}

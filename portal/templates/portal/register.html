@@ -1,0 +1,46 @@
+{% extends 'portal/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg border-0 bg-card">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold mb-1">Create Account</h2>
+                    <p class="text-muted small">Join now to manage your courses</p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}"
+                            class="form-label text-muted small text-uppercase fw-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <div class="form-text text-muted">{{ field.help_text }}</div>
+                        {% endif %}
+                        {% for error in field.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-primary w-100 btn-lg mb-3 mt-3">Register</button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-muted small">Already have an account? <a href="{% url 'login' %}"
+                            class="fw-bold">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Add styling to form fields rendered by Django
+    document.querySelectorAll('input').forEach(input => {
+        input.classList.add('form-control', 'form-control-lg', 'bg-dark', 'border-secondary', 'text-white');
+    });
+</script>
+{% endblock %}

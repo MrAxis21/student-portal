@@ -1,0 +1,177 @@
+{% extends 'portal/base.html' %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-md-6">
+        <h2 class="fw-bold mb-0">Admin Dashboard</h2>
+        <p class="text-muted">Overview of system activity</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a href="{% url 'admin:index' %}" class="btn btn-primary me-2">
+            Django Admin
+        </a>
+        <a href="{% url 'add_subject' %}" class="btn btn-primary">
+            + Add New Subject
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="row mb-4">
+    <div class="col-12">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card p-4 h-100 border-0 bg-card">
+            <h6 class="text-uppercase text-muted fw-bold mb-3">Pending Requests</h6>
+            <h1 class="display-4 fw-bold mb-0 text-warning">{{ pending_enrollments.count }}</h1>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 h-100 border-0 bg-card">
+            <h6 class="text-uppercase text-muted fw-bold mb-3">Total Subjects</h6>
+            <h1 class="display-4 fw-bold mb-0">{{ total_subjects_count }}</h1>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-card border-0 shadow-sm">
+    <div class="card-header bg-transparent border-bottom border-secondary border-opacity-25 pb-3">
+        <h5 class="fw-bold mb-0">Pending Enrollment Requests</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-dark text-white">
+                    <tr>
+                        <th class="ps-4">Student</th>
+                        <th>Subject</th>
+                        <th>Date Requested</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    {% for enrollment in pending_enrollments %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3"
+                                    style="width: 40px; height: 40px; color: white;">
+                                    {{ enrollment.student.username|first|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-white">{{ enrollment.student.username }}</div>
+                                    <div class="small text-muted">{{ enrollment.student.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-white">{{ enrollment.subject.name }}</div>
+                            <div class="small text-muted">{{ enrollment.subject.code }}</div>
+                        </td>
+                        <td class="text-muted">Today</td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="{% url 'approve_enrollment' enrollment.id %}"
+                                    class="btn btn-sm btn-success">Approve</a>
+                                <a href="{% url 'reject_enrollment' enrollment.id %}"
+                                    class="btn btn-sm btn-outline-danger">Reject</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <p class="mb-0">No pending enrollment requests found.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</div>
+
+<div class="card bg-card border-0 shadow-sm mt-5">
+    <div class="card-header bg-transparent border-bottom border-secondary border-opacity-25 pb-3">
+        <h5 class="fw-bold mb-0">Service Requests</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-dark text-white">
+                    <tr>
+                        <th class="ps-3 py-2" style="width: 15%;">Request Type</th>
+                        <th class="py-2" style="width: 20%;">Student</th>
+                        <th class="py-2" style="width: 35%;">Details</th>
+                        <th class="py-2">Date</th>
+                        <th class="py-2">Status</th>
+                        <th class="text-end pe-3 py-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    {% for req in requests %}
+                    <tr>
+                        <td class="ps-3 py-2 text-white fw-bold">{{ req.get_request_type_display }}</td>
+                        <td class="py-2">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2"
+                                    style="width: 32px; height: 32px; color: white; font-size: 0.8rem;">
+                                    {{ req.student.username|first|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-white small">{{ req.student.username }}</div>
+                                    <div class="small text-muted" style="font-size: 0.7rem;">{{ req.student.email }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-muted small py-2">{{ req.details|truncatechars:60 }}</td>
+                        <td class="text-muted small py-2">{{ req.created_at|date:"M d" }}</td>
+                        <td class="py-2">
+                            {% if req.status == 'pending' %}
+                            <span class="badge bg-warning bg-opacity-25 text-warning"
+                                style="font-size: 0.7rem;">Pending</span>
+                            {% elif req.status == 'approved' %}
+                            <span class="badge bg-success bg-opacity-25 text-success"
+                                style="font-size: 0.7rem;">Approved</span>
+                            {% elif req.status == 'rejected' %}
+                            <span class="badge bg-danger bg-opacity-25 text-danger"
+                                style="font-size: 0.7rem;">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-3 py-2">
+                            {% if req.status == 'pending' %}
+                            <a href="{% url 'update_request_status' req.id 'approved' %}"
+                                class="btn btn-sm btn-outline-success border-0 px-2 py-0"
+                                style="font-size: 0.8rem;">Approve</a>
+                            <a href="{% url 'update_request_status' req.id 'rejected' %}"
+                                class="btn btn-sm btn-outline-danger border-0 px-2 py-0 ms-1"
+                                style="font-size: 0.8rem;">Reject</a>
+                            {% else %}
+                            <span class="text-muted" style="font-size: 0.8rem;">Completed</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No service requests found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
