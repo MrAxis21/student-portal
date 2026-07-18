@@ -86,7 +86,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 import os
 
-if os.environ.get('RENDER'):
+if os.environ.get('RENDER') and os.path.exists('/data') and os.access('/data', os.W_OK):
     db_path = '/data/db.sqlite3'
 else:
     db_path = BASE_DIR / 'db.sqlite3'
