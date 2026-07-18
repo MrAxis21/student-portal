@@ -225,3 +225,17 @@ class PortalTests(TestCase):
         # Verify seat count decremented
         self.math_section.refresh_from_db()
         self.assertEqual(self.math_section.seats_available, 9)
+
+    def test_initialize_demo_view(self):
+        # 1. Clear database entries to simulate blank DB
+        Section.objects.all().delete()
+        Subject.objects.all().delete()
+        User.objects.filter(username='student').delete()
+        
+        # 2. Call the post endpoint to initialize the demo
+        response = self.client.post('/initialize-demo/')
+        self.assertRedirects(response, '/login/')
+        
+        # 3. Verify user and subjects are created
+        self.assertTrue(User.objects.filter(username='student').exists())
+        self.assertTrue(Subject.objects.filter(code='MATH101').exists())

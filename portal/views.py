@@ -425,3 +425,311 @@ def schedule_view(request):
 @login_required
 def help_view(request):
     return render(request, 'portal/help.html')
+
+def initialize_demo(request):
+    if request.method == 'POST':
+        from django.contrib.auth.models import User
+        from portal.models import Subject, Section, StudentCourseGrade, Notification
+        import datetime
+
+        try:
+            # 1. Create default users
+            if not User.objects.filter(username='admin').exists():
+                User.objects.create_superuser('admin', 'admin@example.com', 'adminpass')
+            if not User.objects.filter(username='student').exists():
+                User.objects.create_user('student', 'student@example.com', 'studentpass')
+                
+            student = User.objects.get(username='student')
+
+            # 2. Clear subjects and grades
+            Section.objects.all().delete()
+            Subject.objects.all().delete()
+            StudentCourseGrade.objects.filter(student=student).delete()
+            Notification.objects.filter(student=student).delete()
+
+            # 3. Create subjects data
+            subjects_data = [
+                # Year 1 Semester 1
+                {
+                    'name': 'Calculus I',
+                    'code': 'MATH101',
+                    'description': 'Limits, derivatives, integrals, and their applications in science and engineering.',
+                    'credits': 4,
+                    'category': 'Math/Science',
+                    'plan_year': 1,
+                    'plan_semester': 1,
+                    'prerequisites': 'None',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Mon/Wed 09:00 - 10:30', 'days_pattern': 'MW', 'time_start': datetime.time(9, 0), 'time_end': datetime.time(10, 30), 'instructor': 'Dr. Alan Turing', 'room': 'Science Hall 101', 'seats_total': 40, 'seats_available': 12, 'final_exam_date': 'Dec 15, 2026'},
+                        {'section_number': '02', 'days_and_time': 'Tue/Thu 11:00 - 12:30', 'days_pattern': 'TR', 'time_start': datetime.time(11, 0), 'time_end': datetime.time(12, 30), 'instructor': 'Dr. Grace Hopper', 'room': 'Science Hall 102', 'seats_total': 40, 'seats_available': 28, 'final_exam_date': 'Dec 16, 2026'},
+                    ]
+                },
+                {
+                    'name': 'Intro to Computing',
+                    'code': 'CPE101',
+                    'description': 'Introduction to computer architecture, software development concepts, and binary math.',
+                    'credits': 3,
+                    'category': 'CPE Core',
+                    'plan_year': 1,
+                    'plan_semester': 1,
+                    'prerequisites': 'None',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Mon/Wed 11:00 - 12:30', 'days_pattern': 'MW', 'time_start': datetime.time(11, 0), 'time_end': datetime.time(12, 30), 'instructor': 'Dr. Ada Lovelace', 'room': 'Engineering Bldg 204', 'seats_total': 35, 'seats_available': 0, 'final_exam_date': 'Dec 14, 2026'},
+                        {'section_number': '02', 'days_and_time': 'Tue/Thu 09:00 - 10:30', 'days_pattern': 'TR', 'time_start': datetime.time(9, 0), 'time_end': datetime.time(10, 30), 'instructor': 'Dr. Charles Babbage', 'room': 'Engineering Bldg 204', 'seats_total': 35, 'seats_available': 15, 'final_exam_date': 'Dec 14, 2026'},
+                    ]
+                },
+                # Year 1 Semester 2
+                {
+                    'name': 'Calculus II',
+                    'code': 'MATH102',
+                    'description': 'Techniques of integration, sequences, series, and power series.',
+                    'credits': 4,
+                    'category': 'Math/Science',
+                    'plan_year': 1,
+                    'plan_semester': 2,
+                    'prerequisites': 'MATH101',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Mon/Wed 09:00 - 10:30', 'days_pattern': 'MW', 'time_start': datetime.time(9, 0), 'time_end': datetime.time(10, 30), 'instructor': 'Dr. Alan Turing', 'room': 'Science Hall 101', 'seats_total': 40, 'seats_available': 12, 'final_exam_date': 'Dec 15, 2026'},
+                    ]
+                },
+                {
+                    'name': 'Computer Programming',
+                    'code': 'CPE102',
+                    'description': 'Core programming constructs, functions, arrays, objects, and console I/O using Python.',
+                    'credits': 3,
+                    'category': 'CPE Core',
+                    'plan_year': 1,
+                    'plan_semester': 2,
+                    'prerequisites': 'CPE101',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Tue/Thu 14:00 - 15:30', 'days_pattern': 'TR', 'time_start': datetime.time(14, 0), 'time_end': datetime.time(15, 30), 'instructor': 'Dr. Charles Babbage', 'room': 'Engineering Bldg 204', 'seats_total': 35, 'seats_available': 15, 'final_exam_date': 'Dec 14, 2026'},
+                    ]
+                },
+                # Year 2 Semester 1
+                {
+                    'name': 'Digital Logic Design',
+                    'code': 'CPE201',
+                    'description': 'Number systems, boolean algebra, logic gates, combinational and sequential circuit design.',
+                    'credits': 4,
+                    'category': 'CPE Core',
+                    'plan_year': 2,
+                    'plan_semester': 1,
+                    'prerequisites': 'CPE101',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Mon/Wed 14:00 - 15:30', 'days_pattern': 'MW', 'time_start': datetime.time(14, 0), 'time_end': datetime.time(15, 30), 'instructor': 'Dr. Grace Hopper', 'room': 'Engineering Bldg 103', 'seats_total': 30, 'seats_available': 20, 'final_exam_date': 'Dec 16, 2026'},
+                    ]
+                },
+                # Year 2 Semester 2
+                {
+                    'name': 'Data Structures & Algorithms',
+                    'code': 'CPE202',
+                    'description': 'Stacks, queues, linked lists, trees, graphs, sorting, and big-O time complexity analysis.',
+                    'credits': 4,
+                    'category': 'CPE Core',
+                    'plan_year': 2,
+                    'plan_semester': 2,
+                    'prerequisites': 'CPE102',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Tue/Thu 09:00 - 10:30', 'days_pattern': 'TR', 'time_start': datetime.time(9, 0), 'time_end': datetime.time(10, 30), 'instructor': 'Dr. Donald Knuth', 'room': 'Engineering Bldg 202', 'seats_total': 30, 'seats_available': 14, 'final_exam_date': 'Dec 15, 2026'},
+                        {'section_number': '02', 'days_and_time': 'Mon/Wed 11:00 - 12:30', 'days_pattern': 'MW', 'time_start': datetime.time(11, 0), 'time_end': datetime.time(12, 30), 'instructor': 'Dr. Donald Knuth', 'room': 'Engineering Bldg 202', 'seats_total': 30, 'seats_available': 2, 'final_exam_date': 'Dec 15, 2026'},
+                    ]
+                },
+                # Year 3 Semester 1
+                {
+                    'name': 'Embedded Systems',
+                    'code': 'CPE502',
+                    'description': 'Bridge the gap between hardware and software using microcontrollers and RTOS.',
+                    'credits': 4,
+                    'category': 'CPE Core',
+                    'plan_year': 3,
+                    'plan_semester': 1,
+                    'prerequisites': 'CPE201',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Tue/Thu 11:00 - 12:30', 'days_pattern': 'TR', 'time_start': datetime.time(11, 0), 'time_end': datetime.time(12, 30), 'instructor': 'Dr. Ken Thompson', 'room': 'Hardware Lab 105', 'seats_total': 25, 'seats_available': 11, 'final_exam_date': 'Dec 17, 2026'},
+                    ]
+                },
+                {
+                    'name': 'Database Systems',
+                    'code': 'DB301',
+                    'description': 'Master SQL, NoSQL, and database design principles.',
+                    'credits': 3,
+                    'category': 'CPE Core',
+                    'plan_year': 3,
+                    'plan_semester': 1,
+                    'prerequisites': 'CPE202',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Tue/Thu 11:00 - 12:30', 'days_pattern': 'TR', 'time_start': datetime.time(11, 0), 'time_end': datetime.time(12, 30), 'instructor': 'Dr. Edgar F. Codd', 'room': 'Engineering Bldg 103', 'seats_total': 40, 'seats_available': 4, 'final_exam_date': 'Dec 13, 2026'},
+                    ]
+                },
+                # Year 3 Semester 2
+                {
+                    'name': 'Operating Systems',
+                    'code': 'CPE302',
+                    'description': 'Processes, threads, memory management, file systems, and scheduling.',
+                    'credits': 4,
+                    'category': 'CPE Core',
+                    'plan_year': 3,
+                    'plan_semester': 2,
+                    'prerequisites': 'CPE202',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Mon/Wed 14:00 - 15:30', 'days_pattern': 'MW', 'time_start': datetime.time(14, 0), 'time_end': datetime.time(15, 30), 'instructor': 'Dr. Linus Torvalds', 'room': 'Engineering Bldg 202', 'seats_total': 30, 'seats_available': 18, 'final_exam_date': 'Dec 16, 2026'},
+                    ]
+                },
+                # Year 4 Semester 1
+                {
+                    'name': 'Software Engineering',
+                    'code': 'SE401',
+                    'description': 'Understand the software lifecycle, agile methodologies, and testing.',
+                    'credits': 3,
+                    'category': 'CPE Core',
+                    'plan_year': 4,
+                    'plan_semester': 1,
+                    'prerequisites': 'CPE202',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Tue/Thu 09:00 - 10:30', 'days_pattern': 'TR', 'time_start': datetime.time(9, 0), 'time_end': datetime.time(10, 30), 'instructor': 'Dr. Margaret Hamilton', 'room': 'Software Lab 112', 'seats_total': 35, 'seats_available': 20, 'final_exam_date': 'Dec 14, 2026'},
+                    ]
+                },
+                # Technical Electives
+                {
+                    'name': 'Machine Learning',
+                    'code': 'CPE501',
+                    'description': 'Supervised and unsupervised learning, regression, neural networks, and decision trees.',
+                    'credits': 3,
+                    'category': 'Technical Elective',
+                    'plan_year': 5,
+                    'plan_semester': 1,
+                    'prerequisites': 'MATH102',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Mon/Wed 16:00 - 17:30', 'days_pattern': 'MW', 'time_start': datetime.time(16, 0), 'time_end': datetime.time(17, 30), 'instructor': 'Dr. Yann LeCun', 'room': 'Engineering Bldg 312', 'seats_total': 25, 'seats_available': 2, 'final_exam_date': 'Dec 18, 2026'},
+                    ]
+                },
+                # Humanities
+                {
+                    'name': 'Academic English',
+                    'code': 'HUM101',
+                    'description': 'Critical reading, essay writing, and research skills for academic purposes.',
+                    'credits': 3,
+                    'category': 'Humanities',
+                    'plan_year': 1,
+                    'plan_semester': 1,
+                    'prerequisites': 'None',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Mon/Wed 12:30 - 14:00', 'days_pattern': 'MW', 'time_start': datetime.time(12, 30), 'time_end': datetime.time(14, 0), 'instructor': 'Prof. William Shakespeare', 'room': 'Liberal Arts 101', 'seats_total': 30, 'seats_available': 10, 'final_exam_date': 'Dec 13, 2026'},
+                    ]
+                },
+                # General Electives
+                {
+                    'name': 'Intro to Sociology',
+                    'code': 'SOC101',
+                    'description': 'Analysis of human social behavior, culture, and institutions.',
+                    'credits': 3,
+                    'category': 'General Elective',
+                    'plan_year': 2,
+                    'plan_semester': 1,
+                    'prerequisites': 'None',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Tue/Thu 12:30 - 14:00', 'days_pattern': 'TR', 'time_start': datetime.time(12, 30), 'time_end': datetime.time(14, 0), 'instructor': 'Prof. Max Weber', 'room': 'Liberal Arts 203', 'seats_total': 45, 'seats_available': 34, 'final_exam_date': 'Dec 14, 2026'},
+                    ]
+                },
+                {
+                    'name': 'Web Development',
+                    'code': 'WEB101',
+                    'description': 'Learn HTML, CSS, JavaScript, and Django to build modern web applications.',
+                    'credits': 4,
+                    'category': 'Technical Elective',
+                    'plan_year': 5,
+                    'plan_semester': 2,
+                    'prerequisites': 'CPE202',
+                    'sections': [
+                        {'section_number': '01', 'days_and_time': 'Mon/Wed 09:00 - 10:30', 'days_pattern': 'MW', 'time_start': datetime.time(9, 0), 'time_end': datetime.time(10, 30), 'instructor': 'Dr. Tim Berners-Lee', 'room': 'Engineering Bldg 110', 'seats_total': 35, 'seats_available': 10, 'final_exam_date': 'Dec 12, 2026'},
+                        {'section_number': '02', 'days_and_time': 'Tue/Thu 14:00 - 15:30', 'days_pattern': 'TR', 'time_start': datetime.time(14, 0), 'time_end': datetime.time(15, 30), 'instructor': 'Dr. Tim Berners-Lee', 'room': 'Engineering Bldg 110', 'seats_total': 35, 'seats_available': 35, 'final_exam_date': 'Dec 12, 2026'},
+                    ]
+                }
+            ]
+
+            for item in subjects_data:
+                subject = Subject.objects.create(
+                    name=item['name'],
+                    code=item['code'],
+                    description=item['description'],
+                    credits=item['credits'],
+                    category=item['category'],
+                    plan_year=item['plan_year'],
+                    plan_semester=item['plan_semester'],
+                    prerequisites=item['prerequisites']
+                )
+                for sec in item['sections']:
+                    Section.objects.create(
+                        subject=subject,
+                        section_number=sec['section_number'],
+                        days_and_time=sec['days_and_time'],
+                        days_pattern=sec['days_pattern'],
+                        time_start=sec['time_start'],
+                        time_end=sec['time_end'],
+                        instructor=sec['instructor'],
+                        room=sec['room'],
+                        seats_total=sec['seats_total'],
+                        seats_available=sec['seats_available'],
+                        final_exam_date=sec['final_exam_date']
+                    )
+
+            # 4. Create grades & notifications
+            grades_data = [
+                {'code': 'MATH101', 'grade': 'B+', 'points': 3.3, 'term': 'Fall 2024'},
+                {'code': 'CPE101', 'grade': 'B-', 'points': 2.7, 'term': 'Fall 2024'},
+                {'code': 'HUM101', 'grade': 'B', 'points': 3.0, 'term': 'Fall 2024'},
+                {'code': 'MATH102', 'grade': 'B+', 'points': 3.3, 'term': 'Spring 2025'},
+                {'code': 'CPE102', 'grade': 'B+', 'points': 3.3, 'term': 'Spring 2025'},
+                {'code': 'CPE201', 'grade': 'A', 'points': 4.0, 'term': 'Fall 2025'},
+                {'code': 'SOC101', 'grade': 'B+', 'points': 3.3, 'term': 'Fall 2025'},
+            ]
+
+            for g in grades_data:
+                try:
+                    subject = Subject.objects.get(code=g['code'])
+                    StudentCourseGrade.objects.create(
+                        student=student,
+                        subject=subject,
+                        grade=g['grade'],
+                        points=g['points'],
+                        term=g['term']
+                    )
+                except Subject.DoesNotExist:
+                    pass
+
+            notifications = [
+                {
+                    'title': 'Seat Available in Watched Course',
+                    'message': 'A seat has just opened up in Web Development (WEB101) Section 01. Click below to register.',
+                    'category': 'seats',
+                    'link': '/registration/'
+                },
+                {
+                    'title': 'Registration Window Countdown',
+                    'message': 'Your enrollment window is scheduled for Fall 2026/2027. Ensure all holds are cleared before your slot opens.',
+                    'category': 'deadlines',
+                    'link': '/dashboard/'
+                },
+                {
+                    'title': 'New Section Opened',
+                    'message': 'A new section (Section 02) has been added for Data Structures & Algorithms (CPE202) taught by Dr. Donald Knuth.',
+                    'category': 'rooms',
+                    'link': '/registration/'
+                }
+            ]
+
+            for n in notifications:
+                Notification.objects.create(
+                    student=student,
+                    title=n['title'],
+                    message=n['message'],
+                    category=n['category'],
+                    is_read=False,
+                    link=n['link']
+                )
+            
+            messages.success(request, 'Database successfully initialized! Log in with username: student and password: studentpass')
+        except Exception as e:
+            messages.error(request, f'Failed to initialize database: {e}')
+            
+    return redirect('login')

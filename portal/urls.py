@@ -7,6 +7,7 @@ urlpatterns = [
     path('', auth_views.LoginView.as_view(template_name='portal/login.html', redirect_authenticated_user=True), name='home'),
     path('register/', views.register, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='portal/login.html'), name='login'),
+    path('initialize-demo/', views.initialize_demo, name='initialize_demo'),
     
     # Subject Registration
     path('subjects/', views.subject_list, name='subject_list'),

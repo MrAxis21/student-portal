@@ -3,6 +3,18 @@
 {% block content %}
 <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
     <div class="col-md-5 col-lg-4">
+        <!-- Demo Environment Initializer -->
+        <div class="card border-0 bg-primary bg-opacity-10 mb-4 shadow-sm">
+            <div class="card-body p-4 text-center">
+                <h6 class="fw-bold text-primary mb-1">Demo Sandbox Environment</h6>
+                <p class="text-muted small mb-3">Click below to instantly create the student profile database, subject catalogue, and mock grades.</p>
+                <form action="{% url 'initialize_demo' %}" method="post" class="m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">Initialize Demo Data</button>
+                </form>
+            </div>
+        </div>
+
         <div class="card shadow-lg border-0 bg-card">
             <div class="card-body p-5">
                 <div class="text-center mb-4">
