@@ -1,0 +1,130 @@
+{% extends 'portal/base.html' %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-md-6">
+        <h2 class="fw-bold mb-0">Notification Center</h2>
+        <p class="text-muted">Real-time alerts, room changes, and seat status updates</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <form method="post" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="mark_all_read">
+            <button type="submit" class="btn btn-primary">Mark All as Read</button>
+        </form>
+    </div>
+</div>
+
+{% if messages %}
+<div class="row mb-4">
+    <div class="col-12">
+        {% for message in messages %}
+        <div class="alert alert-info alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Category Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="btn-group gap-2" role="group">
+            <button type="button" class="btn btn-outline-secondary active filter-btn" data-filter="all">
+                All Alerts
+            </button>
+            <button type="button" class="btn btn-outline-secondary filter-btn" data-filter="seats">
+                Seats Alerts
+            </button>
+            <button type="button" class="btn btn-outline-secondary filter-btn" data-filter="deadlines">
+                Deadlines
+            </button>
+            <button type="button" class="btn btn-outline-secondary filter-btn" data-filter="rooms">
+                Rooms & Schedules
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Notifications list -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm bg-card">
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush" id="notif-list">
+                    {% for notif in notifications %}
+                    <div class="list-group-item p-4 d-flex justify-content-between align-items-start notif-item" data-category="{{ notif.category }}">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3 mt-1">
+                                {% if notif.category == 'seats' %}
+                                <span class="badge bg-success bg-opacity-10 text-success p-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-plus" viewBox="0 0 16 16">
+                                        <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                                        <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5z"/>
+                                    </svg>
+                                </span>
+                                {% elif notif.category == 'deadlines' %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger p-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16">
+                                        <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074 1.017zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.453l.693-.72a8.001 8.001 0 0 1 .594.613l-.848.56zm1.122 1.122c.187.19.356.395.507.616l.829-.56a8 8 0 0 0-.613-.743l-.723.687zm.71 1.37c.143.366.257.743.342 1.126l.976-.219a8.01 8.01 0 0 0-.453-.985l-.933.36zM16 8h-1c0-.28-.03-.56-.092-.83l.977-.217c.075.344.115.698.115 1.047zM8 15a7 7 0 1 1 0-14 7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                        <path d="M7.5 3a.5.5 0 0 0-.5.5v5.21l3.248 1.856a.5.5 0 0 0 .496-.868L7.5 7.5V3.5a.5.5 0 0 0-.5-.5z"/>
+                                    </svg>
+                                </span>
+                                {% else %}
+                                <span class="badge bg-primary bg-opacity-10 text-primary p-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bell" viewBox="0 0 16 16">
+                                        <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.918zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/>
+                                    </svg>
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1 text-dark">{{ notif.title }}</h6>
+                                <p class="mb-2 text-muted small">{{ notif.message }}</p>
+                                <span class="small text-muted" style="font-size: 0.75rem;">{{ notif.created_at|date:"M d, H:i" }}</span>
+                                {% if notif.link %}
+                                <a href="{{ notif.link }}" class="btn btn-sm btn-outline-primary ms-3" style="font-size: 0.75rem; padding: 0.15rem 0.5rem;">Register Now</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="notif_id" value="{{ notif.id }}">
+                            <button type="submit" class="btn btn-sm btn-link text-muted p-0 text-decoration-none" style="font-size: 0.8rem;">Dismiss</button>
+                        </form>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5 text-muted">
+                        <p class="mb-0">No notifications found.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // JS Filter logic
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Toggle active class
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const filterValue = btn.getAttribute('data-filter');
+            document.querySelectorAll('.notif-item').forEach(item => {
+                if (filterValue === 'all' || item.getAttribute('data-category') === filterValue) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

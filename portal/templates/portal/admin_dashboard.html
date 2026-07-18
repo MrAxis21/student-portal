@@ -1,0 +1,103 @@
+{% extends 'portal/base.html' %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-md-6">
+        <h2 class="fw-bold mb-0">Admin Dashboard</h2>
+        <p class="text-muted">Overview of system activity</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a href="{% url 'admin:index' %}" class="btn btn-primary me-2">
+            Django Admin
+        </a>
+        <a href="{% url 'add_subject' %}" class="btn btn-primary">
+            + Add New Subject
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="row mb-4">
+    <div class="col-12">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4 mb-5">
+    <div class="col-md-6">
+        <div class="card p-4 h-100 border-0 bg-card card-gradient">
+            <h6 class="text-uppercase text-muted fw-bold mb-3">Pending Enrollments</h6>
+            <h1 class="display-4 fw-bold mb-0 text-warning">{{ pending_enrollments.count }}</h1>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-4 h-100 border-0 bg-card card-gradient">
+            <h6 class="text-uppercase text-muted fw-bold mb-3">Total Subjects</h6>
+            <h1 class="display-4 fw-bold mb-0" style="color: var(--primary-blue);">{{ total_subjects_count }}</h1>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-card border-0 shadow-sm mb-5">
+    <div class="card-header bg-transparent border-bottom pb-3">
+        <h5 class="fw-bold mb-0">Pending Enrollment Requests</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: var(--primary-blue); color: white;">
+                    <tr>
+                        <th class="ps-4 text-white">Student</th>
+                        <th class="text-white">Subject</th>
+                        <th class="text-white">Date Requested</th>
+                        <th class="text-end pe-4 text-white">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    {% for enrollment in pending_enrollments %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                                    style="width: 40px; height: 40px; background-color: var(--primary-blue); color: white; font-weight: bold;">
+                                    {{ enrollment.student.username|first|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ enrollment.student.username }}</div>
+                                    <div class="small text-muted">{{ enrollment.student.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-bold">{{ enrollment.subject.name }}</div>
+                            <div class="small text-muted">{{ enrollment.subject.code }}</div>
+                        </td>
+                        <td class="text-muted">Today</td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="{% url 'approve_enrollment' enrollment.id %}"
+                                    class="btn btn-sm btn-success px-3">Approve</a>
+                                <a href="{% url 'reject_enrollment' enrollment.id %}"
+                                    class="btn btn-sm btn-outline-danger ms-2">Reject</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <p class="mb-0">No pending enrollment requests found.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

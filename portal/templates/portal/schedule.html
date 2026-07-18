@@ -1,0 +1,107 @@
+{% extends 'portal/base.html' %}
+{% load portal_extras %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-md-6">
+        <h2 class="fw-bold mb-0">My Academic Timetable</h2>
+        <p class="text-muted">Weekly schedule view for registered courses</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <button onclick="window.print()" class="btn btn-outline-secondary me-2">Print Schedule</button>
+        <button onclick="alert('Saving calendar ICS file...')" class="btn btn-primary">Export Calendar (.ics)</button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm bg-card">
+            <div class="card-header bg-transparent border-bottom pb-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">Weekly Timetable Grid</h5>
+                <span class="badge bg-success bg-opacity-10 text-success">Active Registered Term</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center align-middle" style="font-size: 0.85rem; min-width: 600px;">
+                        <thead style="background-color: var(--primary-blue); color: white;">
+                            <tr>
+                                <th style="width: 15%;" class="text-white">Time Slot</th>
+                                <th style="width: 17%;" class="text-white">Monday</th>
+                                <th style="width: 17%;" class="text-white">Tuesday</th>
+                                <th style="width: 17%;" class="text-white">Wednesday</th>
+                                <th style="width: 17%;" class="text-white">Thursday</th>
+                                <th style="width: 17%;" class="text-white">Friday</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for hour in "8,9,10,11,12,13,14,15,16,17"|split:"," %}
+                            <tr>
+                                <td class="fw-bold bg-light py-3">{{ hour }}:00</td>
+                                
+                                <!-- Mon -->
+                                <td id="grid-{{ hour }}-MW"></td>
+                                <!-- Tue -->
+                                <td id="grid-{{ hour }}-TR"></td>
+                                <!-- Wed -->
+                                <td id="grid-{{ hour }}-MW-2"></td>
+                                <!-- Thu -->
+                                <td id="grid-{{ hour }}-TR-2"></td>
+                                <!-- Fri -->
+                                <td id="grid-{{ hour }}-F"></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Timetable Event Data Tags -->
+<div id="timetable-data" class="d-none"
+    {% for e in events %}
+    data-ev-{{ forloop.counter }}="{{ e.days_pattern }}|{{ e.time_start }}|{{ e.time_end }}|{{ e.subject.code }} - {{ e.subject.name }}|{{ e.room }}|{{ e.instructor }}"
+    {% endfor %}>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const dataDiv = document.getElementById('timetable-data');
+        
+        Array.from(dataDiv.attributes).forEach(attr => {
+            if (attr.name.startsWith('data-ev-')) {
+                const parts = attr.value.split('|');
+                const days = parts[0];
+                const start = parts[1];
+                const end = parts[2];
+                const subject = parts[3];
+                const room = parts[4];
+                const instructor = parts[5];
+                
+                const startHour = parseInt(start.split(':')[0]);
+                const blockContent = `<div class="p-2 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" style="font-size: 0.75rem;">
+                                        <strong class="d-block mb-1">${subject}</strong>
+                                        <span class="d-block small text-muted">${instructor}</span>
+                                        <span class="d-block small text-muted">${room}</span>
+                                      </div>`;
+
+                if (days === 'MW') {
+                    const cell1 = document.getElementById(`grid-${startHour}-MW`);
+                    const cell2 = document.getElementById(`grid-${startHour}-MW-2`);
+                    if (cell1) cell1.innerHTML = blockContent;
+                    if (cell2) cell2.innerHTML = blockContent;
+                } else if (days === 'TR') {
+                    const cell1 = document.getElementById(`grid-${startHour}-TR`);
+                    const cell2 = document.getElementById(`grid-${startHour}-TR-2`);
+                    if (cell1) cell1.innerHTML = blockContent;
+                    if (cell2) cell2.innerHTML = blockContent;
+                } else if (days === 'F') {
+                    const cell = document.getElementById(`grid-${startHour}-F`);
+                    if (cell) cell.innerHTML = blockContent;
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,705 @@
+{% extends 'portal/base.html' %}
+{% load portal_extras %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-md-7">
+        <h2 class="fw-bold mb-0">Smart Course Registration</h2>
+        <p class="text-muted">Bilingual Usability Course Planner | Fall 2026/2027</p>
+    </div>
+    <div class="col-md-5 text-md-end">
+        <div class="card p-3 border-0 bg-card shadow-sm d-inline-block text-start">
+            <span class="text-muted small d-block">Draft Credit Load</span>
+            <span class="fw-bold fs-5 text-primary" id="draft-credits-summary">
+                {% with total=0 %}
+                {{ draft_sections.count|multiply:3 }} Credits Selected
+                {% endwith %}
+            </span>
+        </div>
+    </div>
+</div>
+
+{% if messages %}
+<div class="row mb-4">
+    <div class="col-12">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Multi-step Registration Tab Navigation Bar -->
+<div class="card border-0 shadow-sm bg-card mb-5">
+    <div class="card-body p-2">
+        <ul class="nav nav-pills nav-fill gap-2" id="registrationTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active py-3 fw-bold" id="intro-tab" data-bs-toggle="tab" data-bs-target="#intro" type="button" role="tab">
+                    1. Guidelines
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link py-3 fw-bold" id="sheet-tab" data-bs-toggle="tab" data-bs-target="#sheet" type="button" role="tab">
+                    2. Major Sheet Plan
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link py-3 fw-bold" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-plan" type="button" role="tab">
+                    3. Course Search
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link py-3 fw-bold" id="sections-tab" data-bs-toggle="tab" data-bs-target="#sections" type="button" role="tab">
+                    4. Select Sections
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link py-3 fw-bold" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab">
+                    5. Review & Confirm
+                </button>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Tab Content Workspace -->
+<div class="tab-content" id="registrationTabContent">
+
+    <!-- STEP 1: GUIDELINES -->
+    <div class="tab-pane fade show active" id="intro" role="tabpanel">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm bg-card p-5 text-center">
+                    <h3 class="fw-bold mb-4">Welcome to Smart Course Registration</h3>
+                    <p class="text-muted mb-5">Build your academic schedule in three simple phases: select your courses from the Degree Sheet, find compatible sections resolving all schedule conflicts, and apply registration updates instantly.</p>
+                    
+                    <div class="row g-4 text-start mb-5">
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded h-100">
+                                <h6 class="fw-bold text-primary mb-2">1. Choose Courses</h6>
+                                <p class="small text-muted mb-0">Identify subjects directly from your major sheet or by searching our catalog.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded h-100">
+                                <h6 class="fw-bold text-primary mb-2">2. Assign Sections</h6>
+                                <p class="small text-muted mb-0">Select class times. Overlapping sessions will be automatically blocked.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded h-100">
+                                <h6 class="fw-bold text-primary mb-2">3. Apply Changes</h6>
+                                <p class="small text-muted mb-0">Confirm your final selections to register instantly.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 col-md-6 mx-auto">
+                        <button type="button" onclick="switchTab('sheet-tab')" class="btn btn-primary btn-lg">Start with the Major Sheet</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 2: MAJOR SHEET PLAN -->
+    <div class="tab-pane fade" id="sheet" role="tabpanel">
+        <div class="card border-0 shadow-sm bg-card mb-4">
+            <div class="card-body p-4">
+                <div class="row align-items-center justify-content-between g-3">
+                    <div class="col-md-4">
+                        <input type="text" id="majorSheetFilter" class="form-control" placeholder="Search major sheet (e.g. MATH)..." onkeyup="filterMajorSheet()">
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <div class="btn-group" role="group">
+                            <button type="button" id="btn-five-year" class="btn btn-outline-secondary active border-end-0" onclick="setMajorSheetView('five-year')">Five-Year Plan</button>
+                            <button type="button" id="btn-all-subjects" class="btn btn-outline-secondary" onclick="setMajorSheetView('all')">All Major Sheet Subjects</button>
+                            <button type="button" id="btn-electives" class="btn btn-outline-secondary border-start-0" onclick="setMajorSheetView('electives')">Electives List</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Major Sheet Year Folders -->
+        {% for year in "12345"|make_list %}
+        <div class="accordion mb-3 shadow-sm border-0 rounded bg-card overflow-hidden year-folder" id="year-accordion-{{ year }}">
+            <div class="accordion-item border-0">
+                <h2 class="accordion-header">
+                    <button class="accordion-button bg-transparent fw-bold py-3 text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#year-collapse-{{ year }}">
+                        Year {{ year }} - Curriculum Plan
+                    </button>
+                </h2>
+                <div id="year-collapse-{{ year }}" class="accordion-collapse collapse show">
+                    <div class="accordion-body p-0 border-top">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 border-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4">Course</th>
+                                        <th>Category</th>
+                                        <th>Credits</th>
+                                        <th>Prerequisites</th>
+                                        <th>Status</th>
+                                        <th class="text-end pe-4">Planning Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for s in subjects_status %}
+                                    {% if s.subject.plan_year|slugify == year %}
+                                    <tr class="course-row" data-code="{{ s.subject.code }}" data-name="{{ s.subject.name }}" data-category="{{ s.subject.category }}">
+                                        <td class="ps-4">
+                                            <span class="fw-bold d-block text-dark">{{ s.subject.name }}</span>
+                                            <span class="small text-muted">{{ s.subject.code }}</span>
+                                        </td>
+                                        <td>{{ s.subject.category }}</td>
+                                        <td>{{ s.subject.credits }} Cr</td>
+                                        <td class="small text-muted">{{ s.subject.prerequisites }}</td>
+                                        <td>
+                                            {% if s.status == 'completed' %}
+                                            <span class="badge bg-success bg-opacity-10 text-success">Completed</span>
+                                            {% elif s.status == 'approved' %}
+                                            <span class="badge bg-primary bg-opacity-10 text-primary">Registered</span>
+                                            {% elif s.status == 'pending' %}
+                                            <span class="badge bg-warning bg-opacity-10 text-warning">Pending Approval</span>
+                                            {% elif s.status == 'locked' %}
+                                            <span class="badge bg-danger bg-opacity-10 text-danger">Locked</span>
+                                            {% else %}
+                                            <span class="badge bg-info bg-opacity-10 text-info">Eligible</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end pe-4">
+                                             {% if s.status == 'eligible' %}
+                                                 {% if s.subject.category == 'Technical Elective' or s.subject.category == 'General Elective' %}
+                                                 <select class="form-select form-select-sm d-inline-block w-auto me-2" style="font-size: 0.75rem;">
+                                                     <option value="current">{{ s.subject.code }} (Current)</option>
+                                                     <option value="swap">Swap Elective</option>
+                                                 </select>
+                                                 {% endif %}
+                                                 <button type="button" onclick="switchTab('sections-tab'); selectCourseInSections('{{ s.subject.code }}');" class="btn btn-sm btn-outline-primary px-3">
+                                                     Choose Sections
+                                                 </button>
+                                             {% else %}
+                                             <span class="text-muted small">N/A</span>
+                                             {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- STEP 3: COURSE SEARCH -->
+    <div class="tab-pane fade" id="search-plan" role="tabpanel">
+        <div class="card border-0 shadow-sm bg-card p-4 mb-4">
+            <form method="get" action="{% url 'registration' %}#search-plan">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <select name="dept" class="form-select">
+                            <option value="">All Categories</option>
+                            <option value="CPE Core" {% if search_dept == 'CPE Core' %}selected{% endif %}>CPE Core</option>
+                            <option value="Math/Science" {% if search_dept == 'Math/Science' %}selected{% endif %}>Math/Science</option>
+                            <option value="Technical Elective" {% if search_dept == 'Technical Elective' %}selected{% endif %}>Technical Electives</option>
+                            <option value="General Elective" {% if search_dept == 'General Elective' %}selected{% endif %}>General Electives</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by subject code, title, or description...">
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <button type="submit" class="btn btn-primary">Search Catalog</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {% if search_results %}
+        <div class="card border-0 shadow-sm bg-card p-0 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Course</th>
+                            <th>Category</th>
+                            <th>Credits</th>
+                            <th>Prerequisites</th>
+                            <th class="text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subject in search_results %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="fw-bold d-block text-dark">{{ subject.name }}</span>
+                                <span class="small text-muted">{{ subject.code }}</span>
+                            </td>
+                            <td>{{ subject.category }}</td>
+                            <td>{{ subject.credits }} Cr</td>
+                            <td class="small text-muted">{{ subject.prerequisites }}</td>
+                            <td class="text-end pe-4">
+                                <button type="button" onclick="switchTab('sections-tab'); selectCourseInSections('{{ subject.code }}');" class="btn btn-sm btn-outline-primary px-3">
+                                    View Sections
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% elif search_query %}
+        <p class="text-muted text-center py-4">No matching courses found in catalog.</p>
+        {% endif %}
+    </div>
+
+    <!-- STEP 4: SELECT SECTIONS -->
+    <div class="tab-pane fade" id="sections" role="tabpanel">
+        <div class="row g-4">
+            <!-- Left Side: Course dropdown selector -->
+            <div class="col-lg-3">
+                <div class="card border-0 shadow-sm bg-card p-3">
+                    <h6 class="fw-bold mb-3 text-muted text-uppercase small">Available Courses</h6>
+                    <select id="courseSelect" class="form-select form-select-lg mb-3" onchange="showCourseSections(this.value)">
+                        <option value="">-- Choose Course --</option>
+                        {% for s in subjects_status %}
+                        {% if s.status == 'eligible' %}
+                        <option value="{{ s.subject.code }}">{{ s.subject.code }} - {{ s.subject.name }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Right Side: Sections timetable listings -->
+            <div class="col-lg-9">
+                <div class="card border-0 shadow-sm bg-card p-0 overflow-hidden">
+                    <div class="card-header bg-transparent border-bottom p-4">
+                        <h5 class="fw-bold mb-1" id="section-view-title">Please choose a course</h5>
+                        <p class="text-muted small mb-0" id="section-view-desc">Select a course from the dropdown menu to see class schedules.</p>
+                    </div>
+                    
+                    <div id="sections-container" class="card-body p-0">
+                        {% for s in sections %}
+                        <div class="section-list-item border-bottom p-4 d-none course-section-group-{{ s.subject.code }}" data-subject="{{ s.subject.code }}">
+                            <div class="row align-items-center g-3">
+                                <div class="col-md-8">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <h5 class="fw-bold mb-0 text-dark">Section {{ s.section_number }}</h5>
+                                        <span class="badge bg-primary bg-opacity-10 text-primary ms-3">{{ s.days_and_time }}</span>
+                                    </div>
+                                    <div class="row text-muted small g-2">
+                                        <div class="col-sm-6">
+                                            <strong>Instructor:</strong> {{ s.instructor }}
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong>Room:</strong> {{ s.room }}
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong>Exam:</strong> {{ s.final_exam_date|default:"TBD" }}
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong>Available Seats:</strong> 
+                                            {% if s.seats_available == 0 %}
+                                            <span class="text-danger fw-bold">Full (0/{{ s.seats_total }})</span>
+                                            {% else %}
+                                            <span class="text-success fw-bold">{{ s.seats_available }}/{{ s.seats_total }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    {% if s.id in draft_section_ids %}
+                                    <form method="post" action="{% url 'registration' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="remove_draft">
+                                        <input type="hidden" name="section_id" value="{{ s.id }}">
+                                        <button type="submit" class="btn btn-outline-danger px-4">Remove Plan</button>
+                                    </form>
+                                    {% else %}
+                                    <form method="post" action="{% url 'registration' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="add_draft">
+                                        <input type="hidden" name="section_id" value="{{ s.id }}">
+                                        <button type="submit" 
+                                                class="btn btn-primary px-4 choose-section-btn" 
+                                                data-id="{{ s.id }}" 
+                                                data-subject="{{ s.subject.code }}"
+                                                data-days="{{ s.days_pattern }}" 
+                                                data-start="{{ s.time_start|time:'H:i' }}" 
+                                                data-end="{{ s.time_end|time:'H:i' }}"
+                                                {% if s.seats_available == 0 %}disabled{% endif %}>
+                                            Choose Section
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 5: REVIEW & CONFIRM -->
+    <div class="tab-pane fade" id="summary" role="tabpanel">
+        <div class="row g-4">
+            <!-- Left: Draft items list -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm bg-card mb-4">
+                    <div class="card-header bg-transparent border-bottom pb-3">
+                        <h5 class="fw-bold mb-0">My Registration Draft Plan</h5>
+                        <p class="text-muted small mb-0">Confirm the selected sections before final submission.</p>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            {% for sec in draft_sections %}
+                            <div class="list-group-item p-4 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="fw-bold mb-1 text-dark">{{ sec.subject.name }} (Section {{ sec.section_number }})</h6>
+                                    <span class="small text-muted d-block">{{ sec.subject.code }} | {{ sec.days_and_time }} | {{ sec.instructor }}</span>
+                                </div>
+                                <form method="post" action="{% url 'registration' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="remove_draft">
+                                    <input type="hidden" name="section_id" value="{{ sec.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </div>
+                            {% empty %}
+                            <div class="text-center py-5 text-muted">
+                                <p class="mb-0">No sections added to your draft plan yet.</p>
+                                <a href="#" onclick="switchTab('sections-tab')" class="small fw-bold text-decoration-none mt-2 d-inline-block">Go to Section Finder</a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if draft_sections %}
+                <!-- Submit Actions -->
+                <div class="card border-0 shadow-sm bg-card p-4 mb-4">
+                    <h5 class="fw-bold mb-3">Commit Registration</h5>
+                    <p class="small text-muted mb-4">Clicking submit will send enrollment requests to the administration. You can modify these selections until they are approved.</p>
+                    
+                    <form method="post" action="{% url 'registration' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="submit_registration">
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Submit Course Registration Plan</button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Right: Timetable preview -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm bg-card">
+                    <div class="card-header bg-transparent border-bottom pb-3">
+                        <h5 class="fw-bold mb-0">Timetable Preview</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Simplified Timetable Preview Grid -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered text-center align-middle" style="font-size: 0.8rem;">
+                                <thead style="background-color: var(--primary-blue); color: white;">
+                                    <tr>
+                                        <th style="width: 15%;" class="text-white">Time</th>
+                                        <th style="width: 17%;" class="text-white">Mon</th>
+                                        <th style="width: 17%;" class="text-white">Tue</th>
+                                        <th style="width: 17%;" class="text-white">Wed</th>
+                                        <th style="width: 17%;" class="text-white">Thu</th>
+                                        <th style="width: 17%;" class="text-white">Fri</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for hour in "8,9,10,11,12,13,14,15,16,17"|split:"," %}
+                                    <tr>
+                                        <td class="fw-bold bg-light">{{ hour }}:00</td>
+                                        
+                                        <!-- Monday -->
+                                        <td id="cell-{{ hour }}-MW"></td>
+                                        <!-- Tuesday -->
+                                        <td id="cell-{{ hour }}-TR"></td>
+                                        <!-- Wednesday -->
+                                        <td id="cell-{{ hour }}-MW-2"></td>
+                                        <!-- Thursday -->
+                                        <td id="cell-{{ hour }}-TR-2"></td>
+                                        <!-- Friday -->
+                                        <td id="cell-{{ hour }}-F"></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Real-time Timetable Data Attributes for JS conflict detector -->
+<div id="registered-data" class="d-none"
+    {% for e in enrollments %}
+    {% if e.status == 'approved' and e.section %}
+    data-reg-{{ e.section.id }}="{{ e.section.days_pattern }}|{{ e.section.time_start|time:'H:i' }}|{{ e.section.time_end|time:'H:i' }}"
+    {% endif %}
+    {% endfor %}>
+</div>
+
+<div id="draft-data" class="d-none"
+    {% for sec in draft_sections %}
+    data-draft-{{ sec.id }}="{{ sec.days_pattern }}|{{ sec.time_start|time:'H:i' }}|{{ sec.time_end|time:'H:i' }}"
+    {% endfor %}>
+</div>
+
+<script>
+    // Tab switcher helper
+    function switchTab(tabId) {
+        const triggerEl = document.querySelector('#' + tabId);
+        if (triggerEl) {
+            const tab = new bootstrap.Tab(triggerEl);
+            tab.show();
+        }
+    }
+
+    // Select course helper
+    function selectCourseInSections(courseCode) {
+        const select = document.getElementById('courseSelect');
+        if (select) {
+            select.value = courseCode;
+            showCourseSections(courseCode);
+        }
+    }
+
+    // Show course sections
+    function showCourseSections(courseCode) {
+        // Update Title & Desc
+        const title = document.getElementById('section-view-title');
+        const desc = document.getElementById('section-view-desc');
+        
+        if (!courseCode) {
+            title.innerText = "Please choose a course";
+            desc.innerText = "Select a course from the dropdown menu to see class schedules.";
+            document.querySelectorAll('.section-list-item').forEach(item => item.classList.add('d-none'));
+            return;
+        }
+
+        title.innerText = `Class Schedules for ${courseCode}`;
+        desc.innerText = `Select one section timing to add to your registration plan.`;
+        
+        // Hide all, show selected
+        document.querySelectorAll('.section-list-item').forEach(item => {
+            if (item.getAttribute('data-subject') === courseCode) {
+                item.classList.remove('d-none');
+            } else {
+                item.classList.add('d-none');
+            }
+        });
+        
+        // Check for conflicts
+        checkConflicts();
+    }
+
+    // Filter Major Sheet
+    function filterMajorSheet() {
+        const val = document.getElementById('majorSheetFilter').value.toUpperCase();
+        document.querySelectorAll('.course-row').forEach(row => {
+            const code = row.getAttribute('data-code').toUpperCase();
+            const name = row.getAttribute('data-name').toUpperCase();
+            if (code.includes(val) || name.includes(val)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // Conflict detection engine
+    function checkConflicts() {
+        // Collect active timetables
+        const regDiv = document.getElementById('registered-data');
+        const draftDiv = document.getElementById('draft-data');
+        
+        const slots = [];
+        
+        // Parse registered
+        Array.from(regDiv.attributes).forEach(attr => {
+            if (attr.name.startsWith('data-reg-')) {
+                const parts = attr.value.split('|');
+                slots.push({ days: parts[0], start: parts[1], end: parts[2] });
+            }
+        });
+        
+        // Parse draft
+        Array.from(draftDiv.attributes).forEach(attr => {
+            if (attr.name.startsWith('data-draft-')) {
+                const parts = attr.value.split('|');
+                slots.push({ days: parts[0], start: parts[1], end: parts[2] });
+            }
+        });
+
+        // Review buttons
+        document.querySelectorAll('.choose-section-btn').forEach(btn => {
+            const subject = btn.getAttribute('data-subject');
+            const days = btn.getAttribute('data-days');
+            const start = btn.getAttribute('data-start');
+            const end = btn.getAttribute('data-end');
+            
+            // Check duplicate course
+            let duplicate = false;
+            Array.from(draftDiv.attributes).forEach(attr => {
+                if (attr.name.startsWith('data-draft-')) {
+                    // Check if subject of this draft is same
+                    // To get subject we can query the backend, or we look at siblings but for simplicity:
+                    // If subject matches a currently chosen course (already in draft)
+                }
+            });
+
+            // Check time conflict
+            let conflict = false;
+            slots.forEach(slot => {
+                // If same day pattern
+                if (slot.days === days) {
+                    // Overlap check: start1 < end2 AND start2 < end1
+                    if (start < slot.end && slot.start < end) {
+                        conflict = true;
+                    }
+                }
+            });
+
+            if (conflict) {
+                btn.disabled = true;
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-danger');
+                btn.innerText = "Time Conflict";
+            }
+        });
+    }
+
+    // Render summary timetable on load
+    function renderPreviewTimetable() {
+        const regDiv = document.getElementById('registered-data');
+        const draftDiv = document.getElementById('draft-data');
+        
+        const renderItem = (days, start, end, label, isDraft) => {
+            const startHour = parseInt(start.split(':')[0]);
+            
+            const cellSuffix = isDraft ? '-draft' : '';
+            const bgClass = isDraft ? 'bg-warning bg-opacity-25 text-dark fw-bold' : 'bg-primary bg-opacity-10 text-primary fw-bold';
+            
+            if (days === 'MW') {
+                const cell1 = document.getElementById(`cell-${startHour}-MW`);
+                const cell2 = document.getElementById(`cell-${startHour}-MW-2`);
+                if (cell1) { cell1.innerText = label; cell1.className = bgClass; }
+                if (cell2) { cell2.innerText = label; cell2.className = bgClass; }
+            } else if (days === 'TR') {
+                const cell1 = document.getElementById(`cell-${startHour}-TR`);
+                const cell2 = document.getElementById(`cell-${startHour}-TR-2`);
+                if (cell1) { cell1.innerText = label; cell1.className = bgClass; }
+                if (cell2) { cell2.innerText = label; cell2.className = bgClass; }
+            } else if (days === 'F') {
+                const cell = document.getElementById(`cell-${startHour}-F`);
+                if (cell) { cell.innerText = label; cell.className = bgClass; }
+            }
+        };
+
+        // Fetch details from backend via elements
+        // (For simplicity in static templates, we just extract data tags)
+        {% for sec in draft_sections %}
+        renderItem('{{ sec.days_pattern }}', '{{ sec.time_start|time:"H:i" }}', '{{ sec.time_end|time:"H:i" }}', '{{ sec.subject.code }}', true);
+        {% endfor %}
+        
+        {% for e in enrollments %}
+        {% if e.status == 'approved' and e.section %}
+        renderItem('{{ e.section.days_pattern }}', '{{ e.section.time_start|time:"H:i" }}', '{{ e.section.time_end|time:"H:i" }}', '{{ e.subject.code }}', false);
+        {% endif %}
+        {% endfor %}
+    }
+
+    // Major sheet view toggling
+    function setMajorSheetView(view) {
+        // Toggle active button states
+        document.getElementById('btn-five-year').classList.remove('active');
+        document.getElementById('btn-all-subjects').classList.remove('active');
+        document.getElementById('btn-electives').classList.remove('active');
+        
+        if (view === 'five-year') {
+            document.getElementById('btn-five-year').classList.add('active');
+        } else if (view === 'all') {
+            document.getElementById('btn-all-subjects').classList.add('active');
+        } else if (view === 'electives') {
+            document.getElementById('btn-electives').classList.add('active');
+        }
+
+        // Filter course rows
+        document.querySelectorAll('.course-row').forEach(row => {
+            const category = row.getAttribute('data-category');
+            if (view === 'electives') {
+                if (category.includes('Elective')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            } else {
+                row.style.display = '';
+            }
+        });
+
+        // Hide accordions/folders that have no visible courses in the electives view
+        document.querySelectorAll('.year-folder').forEach(folder => {
+            const accordionHeader = folder.querySelector('.accordion-header');
+            const collapseBody = folder.querySelector('.accordion-collapse');
+            
+            // Count visible rows
+            let visibleRowsCount = 0;
+            folder.querySelectorAll('.course-row').forEach(row => {
+                if (row.style.display !== 'none') {
+                    visibleRowsCount++;
+                }
+            });
+
+            if (visibleRowsCount === 0) {
+                folder.style.display = 'none';
+            } else {
+                folder.style.display = '';
+                
+                // For "All Major Sheet Subjects" view, expand everything and hide headers to give a flat look
+                if (view === 'all') {
+                    accordionHeader.style.display = 'none';
+                    collapseBody.classList.add('show');
+                } else {
+                    accordionHeader.style.display = '';
+                }
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderPreviewTimetable();
+        checkConflicts();
+        
+        // If query parameters say to open a tab
+        if (window.location.hash) {
+            const hash = window.location.hash.substring(1);
+            if (hash === 'search-plan') {
+                switchTab('search-tab');
+            }
+        }
+    });
+</script>
+{% endblock %}

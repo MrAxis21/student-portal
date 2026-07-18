@@ -1,0 +1,153 @@
+{% extends 'portal/base.html' %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-md-6">
+        <h2 class="fw-bold mb-0">Academic Grades & GPA Calculator</h2>
+        <p class="text-muted">View transcripts and calculate hypothetical GPA targets</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <div class="card p-3 border-0 bg-card shadow-sm d-inline-block text-start me-3">
+            <span class="text-muted small d-block">Cumulative GPA</span>
+            <span class="fw-bold fs-5" id="current-gpa-val" style="color: var(--primary-blue);">{{ cumulative_gpa }}</span>
+        </div>
+        <div class="card p-3 border-0 bg-card shadow-sm d-inline-block text-start">
+            <span class="text-muted small d-block">Credits Completed</span>
+            <span class="fw-bold fs-5 text-success">{{ total_credits }} Cr</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Academic Transcript -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm bg-card mb-5">
+            <div class="card-header bg-transparent border-bottom pb-3">
+                <h5 class="fw-bold mb-0">Academic Transcript</h5>
+            </div>
+            <div class="card-body p-0">
+                {% for term, term_grades in grades_by_term.items %}
+                <div class="p-3 bg-light border-bottom fw-bold d-flex justify-content-between">
+                    <span>{{ term }}</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 border-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Course</th>
+                                <th>Credits</th>
+                                <th>Grade</th>
+                                <th class="text-end pe-4">Points</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for g in term_grades %}
+                            <tr>
+                                <td class="ps-4">
+                                    <span class="fw-bold d-block text-dark">{{ g.subject.name }}</span>
+                                    <span class="small text-muted">{{ g.subject.code }}</span>
+                                </td>
+                                <td>{{ g.subject.credits }} Cr</td>
+                                <td><span class="badge bg-primary bg-opacity-10 text-primary">{{ g.grade }}</span></td>
+                                <td class="text-end pe-4">{{ g.points }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center py-5">No historical transcript records found.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- What-If GPA Calculator -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm bg-card position-sticky" style="top: 100px;" id="calc-card" data-gpa="{{ cumulative_gpa }}" data-credits="{{ total_credits }}">
+            <div class="card-header bg-transparent border-bottom pb-3">
+                <h5 class="fw-bold mb-0">What-If GPA Calculator</h5>
+                <p class="text-muted small mb-0">Predict your new cumulative GPA by setting target grades for current subjects.</p>
+            </div>
+            <div class="card-body">
+                {% if current_enrollments %}
+                <form id="what-if-form" onsubmit="event.preventDefault(); calculateGPA();">
+                    <div class="mb-4">
+                        <label class="form-label text-muted small text-uppercase fw-bold">Active Courses</label>
+                        {% for enrollment in current_enrollments %}
+                        <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
+                            <div>
+                                <span class="fw-bold d-block text-dark">{{ enrollment.subject.name }}</span>
+                                <span class="small text-muted">{{ enrollment.subject.code }} ({{ enrollment.subject.credits }} Credits)</span>
+                            </div>
+                            <div style="width: 120px;">
+                                <select class="form-select gpa-input form-select-sm" data-credits="{{ enrollment.subject.credits }}">
+                                    <option value="4.0">A (4.0)</option>
+                                    <option value="3.7">A- (3.7)</option>
+                                    <option value="3.3">B+ (3.3)</option>
+                                    <option value="3.0">B (3.0)</option>
+                                    <option value="2.7">B- (2.7)</option>
+                                    <option value="2.3">C+ (2.3)</option>
+                                    <option value="2.0">C (2.0)</option>
+                                    <option value="1.0">D (1.0)</option>
+                                    <option value="0.0">F (0.0)</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Live Recalculation Results -->
+                    <div class="p-3 rounded bg-light border text-center mb-4">
+                        <span class="small text-muted d-block text-uppercase fw-bold mb-1">Projected Cumulative GPA</span>
+                        <h2 class="fw-bold mb-0" id="projected-gpa" style="color: var(--primary-blue);">{{ cumulative_gpa }}</h2>
+                        <span class="small text-muted" id="projected-credits">Based on {{ total_credits }} total credits</span>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="button" onclick="calculateGPA()" class="btn btn-primary">Calculate Projection</button>
+                    </div>
+                </form>
+                {% else %}
+                <p class="text-muted text-center py-4">You are not registered in any active courses this term to run projections.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calculateGPA() {
+        const card = document.getElementById('calc-card');
+        const currentGPA = parseFloat(card.getAttribute('data-gpa'));
+        const currentCredits = parseInt(card.getAttribute('data-credits'));
+        
+        let currentPoints = currentGPA * currentCredits;
+        let additionalPoints = 0;
+        let additionalCredits = 0;
+        
+        document.querySelectorAll('.gpa-input').forEach(select => {
+            const gradePoints = parseFloat(select.value);
+            const courseCredits = parseInt(select.getAttribute('data-credits'));
+            
+            additionalPoints += (gradePoints * courseCredits);
+            additionalCredits += courseCredits;
+        });
+        
+        const totalCredits = currentCredits + additionalCredits;
+        const totalPoints = currentPoints + additionalPoints;
+        const newGPA = totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
+        
+        document.getElementById('projected-gpa').innerText = newGPA;
+        document.getElementById('projected-credits').innerText = `Based on ${totalCredits} total credits`;
+        
+        // Add a brief animation highlighting the calculation result
+        const projectedElem = document.getElementById('projected-gpa');
+        projectedElem.style.transform = 'scale(1.15)';
+        projectedElem.style.transition = 'transform 0.15s ease';
+        setTimeout(() => {
+            projectedElem.style.transform = 'scale(1)';
+        }, 150);
+    }
+</script>
+{% endblock %}
