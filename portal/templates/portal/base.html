@@ -73,12 +73,19 @@
             color: rgba(255, 255, 255, 0.8) !important;
             font-weight: 500;
             transition: all 0.2s ease;
+            padding: 0.5rem 12px !important;
         }
 
-        .nav-link:hover,
-        .nav-link.active {
+        .nav-link:hover {
             color: #ffffff !important;
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-link.active {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            font-weight: 600 !important;
         }
 
         /* Cards */
@@ -247,12 +254,12 @@
                     {% if user.is_staff %}
                     <a class="nav-link" href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
                     {% else %}
-                    <a class="nav-link" href="{% url 'student_dashboard' %}">Dashboard</a>
-                    <a class="nav-link" href="{% url 'registration' %}">Course Registration</a>
-                    <a class="nav-link" href="{% url 'academic_progress' %}">Degree Progress</a>
-                    <a class="nav-link" href="{% url 'grades' %}">Grades & GPA</a>
-                    <a class="nav-link" href="{% url 'schedule' %}">Timetable</a>
-                    <a class="nav-link position-relative me-2" href="{% url 'notifications' %}">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}" href="{% url 'student_dashboard' %}">Dashboard</a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'registration' %}active{% endif %}" href="{% url 'registration' %}">Course Registration</a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'academic_progress' %}active{% endif %}" href="{% url 'academic_progress' %}">Degree Progress</a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'grades' %}active{% endif %}" href="{% url 'grades' %}">Grades & GPA</a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'schedule' %}active{% endif %}" href="{% url 'schedule' %}">Timetable</a>
+                    <a class="nav-link position-relative me-2 {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}" href="{% url 'notifications' %}">
                         Notifications
                         {% with count=user|unread_count %}
                         {% if count > 0 %}
@@ -262,7 +269,7 @@
                         {% endif %}
                         {% endwith %}
                     </a>
-                    <a class="nav-link" href="{% url 'help' %}">Help</a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}" href="{% url 'help' %}">Help</a>
                     {% endif %}
                     <form action="{% url 'logout' %}" method="post" class="d-inline">
                         {% csrf_token %}
